@@ -7,9 +7,11 @@ import isPlainObject from 'lodash/isPlainObject'
 import hoistStatics from 'hoist-non-react-statics'
 import invariant from 'invariant'
 
+const defaultMapSubsToState = () => ({})
 const defaultMapStateToProps = state => ({}) // eslint-disable-line no-unused-vars
 const defaultMapDispatchToProps = dispatch => ({ dispatch })
-const defaultMergeProps = (stateProps, dispatchProps, parentProps) => ({
+const defaultMergeProps = (trackerProps, stateProps, dispatchProps, parentProps) => ({
+  ...trackerProps,
   ...parentProps,
   ...stateProps,
   ...dispatchProps
@@ -32,7 +34,10 @@ function tryCatch(fn, ctx) {
 // Helps track hot reloading.
 let nextVersion = 0
 
-export default function connect(mapStateToProps, mapDispatchToProps, mergeProps, options = {}) {
+export default function connect(mapTrackerToProps, mapStateToProps, mapDispatchToProps, mergeProps, options = {}) {
+  const shouldTracker = Boolean(mapTrackerToProps);
+  const mapTracker = mapTrackerToProps || defaultMapSubsToState
+
   const shouldSubscribe = Boolean(mapStateToProps)
   const mapState = mapStateToProps || defaultMapStateToProps
 
@@ -64,8 +69,8 @@ export default function connect(mapStateToProps, mapDispatchToProps, mergeProps,
       }
     }
 
-    function computeMergedProps(stateProps, dispatchProps, parentProps) {
-      const mergedProps = finalMergeProps(stateProps, dispatchProps, parentProps)
+    function computeMergedProps(trackerProps, stateProps, dispatchProps, parentProps) {
+      const mergedProps = finalMergeProps(trackerProps, stateProps, dispatchProps, parentProps)
       if (process.env.NODE_ENV !== 'production') {
         checkStateShape(mergedProps, 'mergeProps')
       }
@@ -92,6 +97,19 @@ export default function connect(mapStateToProps, mapDispatchToProps, mergeProps,
         const storeState = this.store.getState()
         this.state = { storeState }
         this.clearCache()
+      }
+
+      componentWillMount() {
+        if (shouldTracker) {
+          Tracker.autorun(() => {
+            const newTrackerProps = mapTracker(this.store.getState(), this.props)
+            if (!this.trackerProps || !shallowEqual(newTrackerProps, this.trackerProps)) {
+              this.trackerProps = newTrackerProps;
+              this.hasTrackerChanged = true
+              this.forceUpdate()
+            }
+          })
+        }
       }
 
       computeStateProps(store, props) {
@@ -181,7 +199,7 @@ export default function connect(mapStateToProps, mapDispatchToProps, mergeProps,
       }
 
       updateMergedPropsIfNeeded() {
-        const nextMergedProps = computeMergedProps(this.stateProps, this.dispatchProps, this.props)
+        const nextMergedProps = computeMergedProps(this.trackerProps, this.stateProps, this.dispatchProps, this.props)
         if (this.mergedProps && checkMergedEquals && shallowEqual(nextMergedProps, this.mergedProps)) {
           return false
         }
@@ -224,11 +242,13 @@ export default function connect(mapStateToProps, mapDispatchToProps, mergeProps,
       }
 
       clearCache() {
+        this.trackerProps = null
         this.dispatchProps = null
         this.stateProps = null
         this.mergedProps = null
         this.haveOwnPropsChanged = true
         this.hasStoreStateChanged = true
+        this.hasTrackerChanged = true
         this.haveStatePropsBeenPrecalculated = false
         this.statePropsPrecalculationError = null
         this.renderedElement = null
@@ -273,6 +293,7 @@ export default function connect(mapStateToProps, mapDispatchToProps, mergeProps,
 
       render() {
         const {
+          hasTrackerChanged,
           haveOwnPropsChanged,
           hasStoreStateChanged,
           haveStatePropsBeenPrecalculated,
@@ -282,6 +303,7 @@ export default function connect(mapStateToProps, mapDispatchToProps, mergeProps,
 
         this.haveOwnPropsChanged = false
         this.hasStoreStateChanged = false
+        this.hasTrackerChanged = false
         this.haveStatePropsBeenPrecalculated = false
         this.statePropsPrecalculationError = null
 
@@ -312,6 +334,7 @@ export default function connect(mapStateToProps, mapDispatchToProps, mergeProps,
 
         let haveMergedPropsChanged = true
         if (
+          hasTrackerChanged ||
           haveStatePropsChanged ||
           haveDispatchPropsChanged ||
           haveOwnPropsChanged
