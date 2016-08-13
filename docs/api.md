@@ -40,7 +40,7 @@ ReactDOM.render(
 )
 ```
 
-### `connect([mapStateToProps], [mapDispatchToProps], [mergeProps], [options])`
+### `connect([mapTrackerToProps], [mapStateToProps], [mapDispatchToProps], [mergeProps], [options])`
 
 Connects a React component to a Redux store.
 
@@ -48,6 +48,8 @@ It does not modify the component class passed to it.
 Instead, it *returns* a new, connected component class, for you to use.
 
 #### Arguments
+
+* [`mapTrackerToProps(state, [ownProps]): trackerProps`] \(*Function*): If specified, the component will be reactive with Meteor Tracker. Any time Tracker detects updates, `mapTrackerToProps` will be called. Its result must be a plain object*, and it will be merged into the component’s props. If you omit it, the component will not be reactive with Meteor Tracker. If `ownProps` is specified as a second argument, its value will be the props passed to your component, and `mapTrackerToProps` will be additionally re-invoked whenever the component receives new props (e.g. if props received from a parent component have shallowly changed, and you use the ownProps argument, mapTrackerToProps is re-evaluated).
 
 * [`mapStateToProps(state, [ownProps]): stateProps`] \(*Function*): If specified, the component will subscribe to Redux store updates. Any time it updates, `mapStateToProps` will be called. Its result must be a plain object*, and it will be merged into the component’s props. If you omit it, the component will not be subscribed to the Redux store. If `ownProps` is specified as a second argument, its value will be the props passed to your component, and `mapStateToProps` will be additionally re-invoked whenever the component receives new props (e.g. if props received from a parent component have shallowly changed, and you use the ownProps argument, mapStateToProps is re-evaluated).
 
@@ -117,7 +119,7 @@ Returns the wrapped component instance. Only available if you pass `{ withRef: t
 
 #### Remarks
 
-* It needs to be invoked two times. The first time with its arguments described above, and a second time, with the component: `connect(mapStateToProps, mapDispatchToProps, mergeProps)(MyComponent)`.
+* It needs to be invoked two times. The first time with its arguments described above, and a second time, with the component: `connect(mapTrackerToProps, mapStateToProps, mapDispatchToProps, mergeProps)(MyComponent)`.
 
 * It does not modify the passed React component. It returns a new, connected component, that you should use instead.
 
@@ -156,7 +158,7 @@ function mapStateToProps(state) {
   return { todos: state.todos }
 }
 
-export default connect(mapStateToProps)(TodoApp)
+export default connect(mapTrackerToProps, mapStateToProps)(TodoApp)
 ```
 
 ##### Inject `todos` and all action creators
@@ -168,7 +170,7 @@ function mapStateToProps(state) {
   return { todos: state.todos }
 }
 
-export default connect(mapStateToProps, actionCreators)(TodoApp)
+export default connect(mapTrackerToProps, mapStateToProps, actionCreators)(TodoApp)
 ```
 
 ##### Inject `todos` and all action creators (`addTodo`, `completeTodo`, ...) as `actions`
@@ -185,7 +187,7 @@ function mapDispatchToProps(dispatch) {
   return { actions: bindActionCreators(actionCreators, dispatch) }
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(TodoApp)
+export default connect(mapTrackerToProps, mapStateToProps, mapDispatchToProps)(TodoApp)
 ```
 
 #####  Inject `todos` and a specific action creator (`addTodo`)
@@ -202,7 +204,7 @@ function mapDispatchToProps(dispatch) {
   return bindActionCreators({ addTodo }, dispatch)
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(TodoApp)
+export default connect(mapTrackerToProps, mapStateToProps, mapDispatchToProps)(TodoApp)
 ```
 
 ##### Inject `todos`, todoActionCreators as `todoActions`, and counterActionCreators as `counterActions`
@@ -223,7 +225,7 @@ function mapDispatchToProps(dispatch) {
   }
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(TodoApp)
+export default connect(mapTrackerToProps, mapStateToProps, mapDispatchToProps)(TodoApp)
 ```
 
 ##### Inject `todos`, and todoActionCreators and counterActionCreators together as `actions`
@@ -243,7 +245,7 @@ function mapDispatchToProps(dispatch) {
   }
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(TodoApp)
+export default connect(mapTrackerToProps, mapStateToProps, mapDispatchToProps)(TodoApp)
 ```
 
 ##### Inject `todos`, and all todoActionCreators and counterActionCreators directly as props
@@ -261,7 +263,7 @@ function mapDispatchToProps(dispatch) {
   return bindActionCreators(Object.assign({}, todoActionCreators, counterActionCreators), dispatch)
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(TodoApp)
+export default connect(mapTrackerToProps, mapStateToProps, mapDispatchToProps)(TodoApp)
 ```
 
 ##### Inject `todos` of a specific user depending on props
@@ -273,7 +275,7 @@ function mapStateToProps(state, ownProps) {
   return { todos: state.todos[ownProps.userId] }
 }
 
-export default connect(mapStateToProps)(TodoApp)
+export default connect(mapTrackerToProps, mapStateToProps)(TodoApp)
 ```
 
 ##### Inject `todos` of a specific user depending on props, and inject `props.userId` into the action
@@ -292,5 +294,5 @@ function mergeProps(stateProps, dispatchProps, ownProps) {
   })
 }
 
-export default connect(mapStateToProps, actionCreators, mergeProps)(TodoApp)
+export default connect(mapTrackerToProps, mapStateToProps, actionCreators, mergeProps)(TodoApp)
 ```
