@@ -5,7 +5,7 @@ React bindings for [Redux](https://github.com/reactjs/redux) + [Meteor](https://
 
 Performant and flexible.
 
-This project is forked from [react-redux](https://github.com/reactjs/react-redux) and will not send PR to the original repo because it's for Meteor ONLY.
+> This project is forked from [react-redux](https://github.com/reactjs/react-redux) and will not send PR to the original repo because it's for Meteor ONLY.
 
 ## Installation
 
@@ -23,11 +23,12 @@ npm install --save react-redux-meteor
   - [`connect([mapTrackerToProps], [mapStateToProps], [mapDispatchToProps], [mergeProps], [options])`](docs/api.md#connectmapstatetoprops-mapdispatchtoprops-mergeprops-options)
 - [Troubleshooting](docs/troubleshooting.md#troubleshooting)
 
-## Example
+## What's new in `react-redux-meteor`
 
-The argument `mapTrackerToProps` is what's new in `react-redux-meteor`
+`mapTrackerToProps` is now the first argument of `connect()`
 
-The Tracker props are not stored in redux store because they are client read-only and reactive. You can  change Tracker props by calling Meteor methods.
+> The Tracker props are NOT stored in redux store because they are client read-only and reactive. You can  change Tracker props by calling Meteor methods.
+
 ```
 const mapTrackerToProps = (state, props) => {
   if (Meteor.subscribe('posts').ready()) {
@@ -54,12 +55,23 @@ export default connect(
   mapDispatchToProps
 )(PostList);
 ```
+If you don't want to use Tracker data as props, just put null for the first argument
+```
+export default connect(
+  null,
+  mapStateToProps,
+  mapDispatchToProps
+)(PostList);
+```
+## Q & A
+#### Why not use createContainer in Meteor tutorial?
 
-## How Does It Work?
+If you use `createContainer` and `connect` for `react-redux`, you have to create containers twice. It might affect (Not sure) the performance. But with `react-redux-meteor`, you will only create container once.
 
-We do a deep dive on how React Redux works in [this readthesource episode](https://www.youtube.com/watch?v=VJ38wSFbM3A).  
-Enjoy!
+#### Why not use react-komposer?
 
-## License
+The purpose of developing `react-redux-meteor` is for the users who are already familiar with `react-redux`. It just adds a parameter to `connect()` and very easy to use. However, if you never use `react-redux`, you can try either of them. `react-komposer` is also a good choice.
 
-MIT
+#### Will react-redux-meteor be merged to react-redux?
+
+No. Because `react-redux-meteor` uses Tracker behind the scene which is especially for Meteor. However, if the official react-redux has updates, I will merge the updates into react-redux-meteor.
