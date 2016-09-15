@@ -328,6 +328,24 @@ export default function connect(mapTrackerToProps, mapStateToProps, mapDispatchT
         } else if (shouldUpdateStateProps) {
           haveStatePropsChanged = this.updateStatePropsIfNeeded()
         }
+
+
+        // re-run tracker subscribtion when component own porps changed
+        // fix for https://github.com/lhz516/react-redux-meteor/issues/1 
+        if(haveOwnPropsChanged){
+          console.log('haveOwnPropsChanged');
+          if (shouldTracker) {
+            Tracker.autorun(() => {
+              const newTrackerProps = mapTracker(this.store.getState(), this.props)
+              if (!this.trackerProps || !shallowEqual(newTrackerProps, this.trackerProps)) {
+                this.trackerProps = newTrackerProps;
+              }
+            })
+          } 
+        }
+
+
+
         if (shouldUpdateDispatchProps) {
           haveDispatchPropsChanged = this.updateDispatchPropsIfNeeded()
         }
