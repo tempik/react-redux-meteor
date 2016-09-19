@@ -340,6 +340,8 @@ export default function connect(mapTrackerToProps, mapStateToProps, mapDispatchT
               if (!this.trackerProps || !shallowEqual(newTrackerProps, this.trackerProps)) {
                 this.trackerProps = newTrackerProps;
               }
+              this.hasTrackerChanged = true
+
             })
           } 
         }
