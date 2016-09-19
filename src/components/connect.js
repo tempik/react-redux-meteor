@@ -332,7 +332,7 @@ export default function connect(mapTrackerToProps, mapStateToProps, mapDispatchT
 
         // re-run tracker subscribtion when component own porps changed
         // fix for https://github.com/lhz516/react-redux-meteor/issues/1 
-        if(haveOwnPropsChanged){
+        if(haveStatePropsChanged || haveOwnPropsChanged){
           console.log('haveOwnPropsChanged');
           if (shouldTracker) {
             Tracker.autorun(() => {
